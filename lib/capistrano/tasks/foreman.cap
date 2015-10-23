@@ -5,9 +5,10 @@ namespace :foreman do
       log_path         = fetch(:foreman_log_path)
       user             = fetch(:foreman_user) || host.user
       environment_path = "-e #{fetch(:foreman_env)}" if fetch(:foreman_env)
+      templates_path   = "-t #{fetch(:foreman_template_path)}" if fetch(:foreman_template_path)
 
       within release_path do
-        sudo "#{fetch(:foreman_prefix)} foreman export upstart /etc/init -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{environment_path}"
+        sudo "#{fetch(:foreman_prefix)} foreman export upstart /etc/init -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path}"
       end
     end
   end
@@ -44,5 +45,6 @@ namespace :load do
     set :foreman_user, nil
     set :foreman_log_path, -> { shared_path.join('log') }
     set :foreman_env, nil
+    set :foreman_template_path, nil
   end
 end
