@@ -30,7 +30,7 @@ namespace :foreman do
   desc 'Restart the application services'
   task :restart do
     on roles(fetch(:foreman_roles)) do |host|
-      sudo :service, "#{fetch(:foreman_application)} start || service #{fetch(:foreman_application)} restart"
+      sudo :start, "#{fetch(:foreman_application)} start || sudo restart #{fetch(:foreman_application)}"
     end
   end
 
