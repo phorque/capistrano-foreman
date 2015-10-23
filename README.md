@@ -51,6 +51,7 @@ set :foreman_application, -> { fetch(:application) } # name to use when exportin
 set :foreman_user, -> nil # username to use when generating services; this defaults to the user that Cap's using for SSH.
 set :foreman_log_path, -> { shared_path.join('log') } # log path, defaults to your deployment's /path/to/cap/shared/log
 set :foreman_env, nil # .env file for foreman to inject into the exported service.
+set :foreman_template_path, nil # path to custom foreman export templates, nil by default.
 ```
 
 For more details on the custom ENVIRONMENT variables for Foreman [(see here)](http://ddollar.github.io/foreman/#ENVIRONMENT).
