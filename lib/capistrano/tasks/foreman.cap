@@ -4,11 +4,12 @@ namespace :foreman do
     on roles(fetch(:foreman_roles)) do |host|
       log_path         = fetch(:foreman_log_path)
       user             = fetch(:foreman_user) || host.user
+      formation        = "-m #{fetch(:foreman_formation)}" if fetch(:foreman_formation)
       environment_path = "-e #{fetch(:foreman_env)}" if fetch(:foreman_env)
       templates_path   = "-t #{fetch(:foreman_template_path)}" if fetch(:foreman_template_path)
 
       within release_path do
-        sudo "#{fetch(:foreman_prefix)} foreman export upstart /etc/init -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path}"
+        sudo "#{fetch(:foreman_prefix)} foreman export upstart /etc/init -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path} #{formation}"
       end
     end
   end
