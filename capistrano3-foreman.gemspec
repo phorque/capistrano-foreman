@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['stefan.surzycki@gmail.com']
   spec.description   = %q{Foreman support for Capistrano 3.x}
   spec.summary       = %q{Foreman support for Capistrano 3.x}
-  spec.homepage      = 'https://github.com/surzycki/capistrano-foreman'
+  spec.homepage      = 'https://github.com/phorque/capistrano-foreman'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)
