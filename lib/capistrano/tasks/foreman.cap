@@ -8,9 +8,10 @@ namespace :foreman do
       templates_path   = "-t #{fetch(:foreman_template_path)}" if fetch(:foreman_template_path)
       procfile_path    = "-f #{fetch(:foreman_procfile_path)}" if fetch(:foreman_procfile_path)
       foreman_export_format = fetch(:foreman_export_format) || "systemd"
+      foreman_export_path = fetch(:foreman_export_path) || "/lib/systemd/system/"
 
       within release_path do
-        sudo "#{fetch(:foreman_prefix)} foreman export #{foreman_export_format} /etc/init -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path} #{procfile_path}"
+        sudo "#{fetch(:foreman_prefix)} foreman export #{foreman_export_format} #{foreman_export_path} -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path} #{procfile_path}"
       end
     end
   end
@@ -18,21 +19,36 @@ namespace :foreman do
   desc 'Start the application services'
   task :start do
     on roles(fetch(:foreman_roles)) do |host|
-      sudo :start, fetch(:foreman_application)
+      if fetch(:foreman_export_format) == 'systemd'
+        sudo :systemctl, "daemon-reload"
+        sudo :systemctl, "start #{fetch(:foreman_application)}.target"
+      else
+        sudo :start, fetch(:foreman_application)
+      end
     end
   end
 
   desc 'Stop the application services'
   task :stop do
     on roles(fetch(:foreman_roles)) do |host|
-      sudo :stop, fetch(:foreman_application)
+      if fetch(:foreman_export_format) == 'systemd'
+        sudo :systemctl, "daemon-reload"
+        sudo :systemctl, "stop #{fetch(:foreman_application)}.target"
+      else
+        sudo :stop, fetch(:foreman_application)
+      end
     end
   end
 
   desc 'Restart the application services'
   task :restart do
     on roles(fetch(:foreman_roles)) do |host|
-      sudo :start, "#{fetch(:foreman_application)} || sudo restart #{fetch(:foreman_application)}"
+      if fetch(:foreman_export_format) == 'systemd'
+        sudo :systemctl, "daemon-reload"
+        sudo "systemctl stop #{fetch(:foreman_application)}.target && sudo systemctl start #{fetch(:foreman_application)}.target"
+      else
+        sudo :start, "#{fetch(:foreman_application)} || sudo restart #{fetch(:foreman_application)}"
+      end
     end
   end
 
