@@ -1,16 +1,7 @@
-namespace :load do
-  task :defaults do
-    set :procfile_roles, %w(app)
-    set :procfile_use_sudo, false
-    set :procfile_options, {}
-    set(:environment_path, fetch(:foreman_env)) if fetch(:foreman_env)
-  end
-end
-
 namespace :foreman do
   desc 'Export the Procfile to Ubuntu systemd scripts'
   task :export do
-    on roles fetch :procfile_roles do |host|
+    on roles fetch :foreman_roles do |host|
       default_options = {
         export_format: :systemd,
         export_path: "/etc/systemd/system",
@@ -51,36 +42,24 @@ namespace :foreman do
   desc 'Start the application services'
   task :start do
     on roles(fetch(:foreman_roles)) do |host|
-      if fetch(:foreman_export_format) == 'systemd'
-        sudo :systemctl, "daemon-reload"
-        sudo :systemctl, "start #{fetch(:foreman_application)}.target"
-      else
-        sudo :start, fetch(:foreman_application)
-      end
+      sudo :systemctl, "daemon-reload"
+      sudo :systemctl, "start #{fetch(:foreman_application)}.target"
     end
   end
 
   desc 'Stop the application services'
   task :stop do
     on roles(fetch(:foreman_roles)) do |host|
-      if fetch(:foreman_export_format) == 'systemd'
-        sudo :systemctl, "daemon-reload"
-        sudo :systemctl, "stop #{fetch(:foreman_application)}.target"
-      else
-        sudo :stop, fetch(:foreman_application)
-      end
+      sudo :systemctl, "daemon-reload"
+      sudo :systemctl, "stop #{fetch(:foreman_application)}.target"
     end
   end
 
   desc 'Restart the application services'
   task :restart do
     on roles(fetch(:foreman_roles)) do |host|
-      if fetch(:foreman_export_format) == 'systemd'
-        sudo :systemctl, "daemon-reload"
-        sudo "systemctl stop #{fetch(:foreman_application)}.target && sudo systemctl start #{fetch(:foreman_application)}.target"
-      else
-        sudo :start, "#{fetch(:foreman_application)} || sudo restart #{fetch(:foreman_application)}"
-      end
+      sudo :systemctl, "daemon-reload"
+      sudo "systemctl stop #{fetch(:foreman_application)}.target && sudo systemctl start #{fetch(:foreman_application)}.target"
     end
   end
 
@@ -89,12 +68,11 @@ end
 
 namespace :load do
   task :defaults do
-    set :foreman_prefix, 'bundle exec'
     set :foreman_roles, %w(app)
     set :foreman_application, -> { fetch(:application) }
-    set :foreman_user, nil
-    set :foreman_log_path, -> { shared_path.join('log') }
-    set :foreman_env, nil
-    set :foreman_template_path, nil
+
+    set :procfile_use_sudo, false
+    set :procfile_options, {}
+    set(:environment_path, fetch(:foreman_env)) if fetch(:foreman_env)
   end
 end
