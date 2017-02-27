@@ -62,8 +62,6 @@ namespace :foreman do
       sudo "systemctl stop #{fetch(:foreman_application)}.target && sudo systemctl start #{fetch(:foreman_application)}.target"
     end
   end
-
-  before 'deploy:publishing', 'foreman:export'
 end
 
 namespace :load do
