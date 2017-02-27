@@ -1,17 +1,49 @@
+namespace :load do
+  task :defaults do
+    set :procfile_roles, %w(app)
+    set :procfile_use_sudo, false
+    set :procfile_options, {}
+    set(:environment_path, fetch(:foreman_env)) if fetch(:foreman_env)
+  end
+end
+
 namespace :foreman do
   desc 'Export the Procfile to Ubuntu systemd scripts'
   task :export do
-    on roles(fetch(:foreman_roles)) do |host|
-      log_path         = fetch(:foreman_log_path)
-      user             = fetch(:foreman_user) || host.user
-      environment_path = "-e #{fetch(:foreman_env)}" if fetch(:foreman_env)
-      templates_path   = "-t #{fetch(:foreman_template_path)}" if fetch(:foreman_template_path)
-      procfile_path    = "-f #{fetch(:foreman_procfile_path)}" if fetch(:foreman_procfile_path)
-      foreman_export_format = fetch(:foreman_export_format) || "systemd"
-      foreman_export_path = fetch(:foreman_export_path) || "/lib/systemd/system/"
+    on roles fetch :procfile_roles do |host|
+      default_options = {
+        export_format: :systemd,
+        export_path: "/etc/systemd/system",
+        working_dir: release_path,
+        log_dir: File.join(release_path, "log"),
+        base_port: 5000,
+        app_name: fetch(:application),
+        user: nil,
+        formation: "all=1",
+        environment_path: fetch(:environment_path)
+      }
+      options = default_options.merge fetch(:procfile_options, {}).merge Hash(host.properties.procfile_options)
+      options_map = {
+        working_dir: "-d",
+        log_dir: "-l",
+        base_port: "-p",
+        app_name: "-a",
+        user: "-u",
+        formation: "-m",
+        environment_path: "-e"
+      }
+
+      execute(:mkdir, "-p", options[:log_dir])
 
       within release_path do
-        sudo "#{fetch(:foreman_prefix)} foreman export #{foreman_export_format} #{foreman_export_path} -a #{fetch(:foreman_application)} -u #{user} -l #{log_path} #{templates_path} #{environment_path} #{procfile_path}"
+        args = %w(bundle exec foreman export)
+        args << options[:export_format]
+        args << options[:export_path]
+        options_map.each do |k, v|
+          args << "#{v} #{options[k]}" if options[k]
+        end
+
+        fetch(:procfile_use_sudo) ? sudo(*args) : execute(*args)
       end
     end
   end
